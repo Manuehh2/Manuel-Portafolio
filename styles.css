@@ -44,3 +44,7 @@ h3{
 .texto {
     font-size: 20px;
 }
+
+.border-custom{
+    border-color: rgb(0, 0, 0);
+}
