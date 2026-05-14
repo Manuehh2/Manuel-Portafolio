@@ -76,14 +76,30 @@
         </div>
     </main>
 
-    <div class="container">
-        <h1 class="text-center" id="Contacto" style="margin-bottom: 20px;"> Contacto</h1>
-        <div class="container texto"style="margin-bottom: 50px;">
-            <h3 class="text-left" style="font-size: 20px;">Email 1: untalmanuehh@gmail.com</h3>
-            <h3 class="text-left"style="font-size: 20px;">Email 2: the.troublee69@gmail.com</h3>
-            <h3 class="text-left"style="font-size: 20px;">Numero: +52 9991132966</h3>
+   <div class="container py-5">
+        <h1 class="text-center" id="Contacto" style="margin-bottom: 20px;">Contacto</h1>
+        <div class="row justify-content-center">
+            <div class="col-md-6 border rounded-4 p-4" style="background-color: rgba(0, 0, 0, 0.183);">
+                <h3 class="text-center mb-4" style="font-size: 22px;">Suscríbete a mi Newsletter</h3>
+                
+                <form id="newsletterForm">
+                    <div class="mb-3">
+                        <label for="emailInput" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control bg-dark text-white border-secondary" id="emailInput" placeholder="tu@email.com" required>
+                    </div>
+                    <button type="submit" class="btn btn-info w-100">Suscribirse</button>
+                </form>
+
+                <div id="formResponse" class="mt-3 text-center" style="font-size: 18px; font-weight: 500;"></div>
+                
+                <div class="mt-5 pt-3 border-top border-secondary">
+                    <p class="text-left mb-1" style="font-size: 18px;">Email: untalmanuehh@gmail.com</p>
+                    <p class="text-left" style="font-size: 18px;">Teléfono: +52 9991132966</p>
+                </div>
+            </div>
         </div>
     </div>
+    
 </body>
 
 <script>
