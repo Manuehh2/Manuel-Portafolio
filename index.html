@@ -85,4 +85,45 @@
         </div>
     </div>
 </body>
+
+<script>
+    const newsletterForm = document.getElementById('newsletterForm');
+    const formResponse = document.getElementById('formResponse');
+
+    newsletterForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Evita que la página se recargue
+
+        const email = document.getElementById('emailInput').value;
+
+        try {
+            // Aquí ya está configurada tu URL pública de Render
+            const apiUrl = 'https://manuelportafolio-backend.onrender.com/api/newsletter';
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: email })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Éxito: Se muestra el mensaje de agradecimiento
+                formResponse.style.color = "#00ffff";
+                formResponse.innerHTML = data.mensaje; 
+                newsletterForm.reset();
+            } else {
+                // Error (ej: correo ya registrado)
+                formResponse.style.color = "#ff4d4d";
+                formResponse.innerHTML = data.message || "Ocurrió un error al procesar tu solicitud.";
+            }
+        } catch (error) {
+            formResponse.style.color = "#ff4d4d";
+            formResponse.innerHTML = "Error de conexión con el servidor en la nube.";
+        }
+    });
+</script>
+
 </html>
