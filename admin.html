@@ -15,7 +15,7 @@
     </nav>
 
     <div class="container py-5">
-        <h1 class="text-center mb-4">Panel de Control ADMIN</h1>
+        <h1 class="text-center mb-4">Panel de Control M-ADMIN</h1>
 
         <div class="row justify-content-center" id="loginSection">
             <div class="col-md-5 border rounded p-4" style="background-color: rgba(0,0,0,0.2);">
@@ -38,30 +38,51 @@
         <div id="adminPanels" style="display: none;">
             
             <div class="row justify-content-center mt-4">
-                <div class="col-md-8 border rounded p-4" style="background-color: rgba(0,0,0,0.2);">
-                    <h3 class="text-center" style="color: #00ffff;">Agregar Nuevo Video</h3>
+                <div class="col-md-5 border rounded p-4 me-md-3 mb-3" style="background-color: rgba(0,0,0,0.2);">
+                    <h3 class="text-center" style="color: #00ffff;">Agregar Video</h3>
                     <form id="videoForm">
                         <div class="mb-3">
-                            <label>Título del Video</label>
+                            <label>Título</label>
                             <input type="text" id="vidTitulo" class="form-control bg-dark text-white" required>
                         </div>
                         <div class="mb-3">
-                            <label>URL (Ej. enlace de YouTube)</label>
+                            <label>URL</label>
                             <input type="url" id="vidUrl" class="form-control bg-dark text-white" required>
                         </div>
                         <div class="mb-3">
                             <label>Categoría</label>
-                            <input type="text" id="vidCategoria" class="form-control bg-dark text-white" placeholder="Ej. Edits, Vlogs">
+                            <input type="text" id="vidCategoria" class="form-control bg-dark text-white" placeholder="Ej. Edits">
                         </div>
-                        <button type="submit" class="btn btn-info w-100">Guardar Video en Base de Datos</button>
+                        <button type="submit" class="btn btn-info w-100">Guardar</button>
                     </form>
                     <div id="videoMsg" class="mt-3 text-center"></div>
                 </div>
+
+                <div class="col-md-5 border rounded p-4 mb-3" id="editPanel" style="background-color: rgba(0,0,0,0.2); display: none; border-color: #ffaa00 !important;">
+                    <h3 class="text-center" style="color: #ffaa00;">Editar Video</h3>
+                    <form id="editForm">
+                        <input type="hidden" id="editVidId"> <div class="mb-3">
+                            <label>Título</label>
+                            <input type="text" id="editTitulo" class="form-control bg-dark text-white" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>URL</label>
+                            <input type="url" id="editUrl" class="form-control bg-dark text-white" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Categoría</label>
+                            <input type="text" id="editCategoria" class="form-control bg-dark text-white">
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">Actualizar Video</button>
+                        <button type="button" class="btn btn-secondary w-100 mt-2" onclick="cancelarEdicion()">Cancelar</button>
+                    </form>
+                    <div id="editMsg" class="mt-3 text-center"></div>
+                </div>
             </div>
 
-            <div class="row justify-content-center mt-5">
-                <div class="col-md-8 border rounded p-4" style="background-color: rgba(0,0,0,0.2);">
-                    <h3 class="text-center mb-4" style="color: #ff4d4d;">Gestionar Videos Existentes</h3>
+            <div class="row justify-content-center mt-3">
+                <div class="col-md-10 border rounded p-4" style="background-color: rgba(0,0,0,0.2);">
+                    <h3 class="text-center mb-4">Gestionar Videos Existentes</h3>
                     <div id="listaVideos"></div> 
                 </div>
             </div>
@@ -73,7 +94,7 @@
         const API_URL = 'https://manuelportafolio-backend.onrender.com/api';
         let userToken = ''; 
 
-        // --- LÓGICA DE LOGIN ---
+        // --- LOGIN ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
@@ -91,13 +112,11 @@
                 if (res.ok) {
                     msg.style.color = "#00ffff";
                     msg.innerHTML = `¡Bienvenido ${data.nombre}!`;
-                    userToken = data.token; // Guardamos el token
+                    userToken = data.token; 
                     
-                    // Ocultar login y mostrar los paneles de control
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('adminPanels').style.display = 'block';
                     
-                    // Cargar los videos apenas inicie sesión
                     cargarVideos();
                 } else {
                     msg.style.color = "red";
@@ -108,29 +127,36 @@
             }
         });
 
-        // --- LÓGICA PARA LEER VIDEOS (READ) ---
+        // --- LEER VIDEOS (READ) ---
         async function cargarVideos() {
             try {
                 const res = await fetch(`${API_URL}/videos`);
                 const videos = await res.json();
                 const contenedor = document.getElementById('listaVideos');
                 
-                contenedor.innerHTML = ''; // Limpiar lista
+                contenedor.innerHTML = ''; 
                 
                 if(videos.length === 0){
                     contenedor.innerHTML = '<p class="text-center text-secondary">No hay videos en la base de datos.</p>';
                     return;
                 }
 
-                // Generar un bloque HTML por cada video
                 videos.forEach(video => {
+                    // Protegemos las comillas simples/dobles al pasar datos a la función
+                    const tituloSeguro = video.titulo.replace(/'/g, "\\'");
+                    const urlSegura = video.url.replace(/'/g, "\\'");
+                    const catSegura = video.categoria ? video.categoria.replace(/'/g, "\\'") : '';
+
                     contenedor.innerHTML += `
                         <div class="d-flex justify-content-between align-items-center border-bottom border-secondary py-3">
                             <div>
                                 <h5 class="mb-1">${video.titulo}</h5>
                                 <small class="text-secondary">Categoría: ${video.categoria} | ID: ${video._id}</small>
                             </div>
-                            <button onclick="eliminarVideo('${video._id}')" class="btn btn-sm btn-outline-danger">Borrar</button>
+                            <div>
+                                <button onclick="prepararEdicion('${video._id}', '${tituloSeguro}', '${urlSegura}', '${catSegura}')" class="btn btn-sm btn-outline-warning me-2">Editar</button>
+                                <button onclick="eliminarVideo('${video._id}')" class="btn btn-sm btn-outline-danger">Borrar</button>
+                            </div>
                         </div>
                     `;
                 });
@@ -139,7 +165,7 @@
             }
         }
 
-        // --- LÓGICA PARA CREAR VIDEO (CREATE) ---
+        // --- CREAR VIDEO (CREATE) ---
         document.getElementById('videoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const titulo = document.getElementById('vidTitulo').value;
@@ -162,7 +188,7 @@
                     msg.style.color = "#00ffff";
                     msg.innerHTML = "¡Video creado exitosamente!";
                     document.getElementById('videoForm').reset();
-                    cargarVideos(); // Recargar la lista para que aparezca el nuevo
+                    cargarVideos(); 
                 } else {
                     msg.style.color = "red";
                     msg.innerHTML = data.message || "Error al crear el video";
@@ -172,22 +198,74 @@
             }
         });
 
-        // --- LÓGICA PARA ELIMINAR VIDEO (DELETE) ---
+        // --- PREPARAR EDICIÓN ---
+        function prepararEdicion(id, titulo, url, categoria) {
+            document.getElementById('editPanel').style.display = 'block';
+            document.getElementById('editVidId').value = id;
+            document.getElementById('editTitulo').value = titulo;
+            document.getElementById('editUrl').value = url;
+            document.getElementById('editCategoria').value = categoria;
+            document.getElementById('editMsg').innerHTML = '';
+            // Hacer scroll hacia arriba para ver el formulario
+            window.scrollTo(0, 0); 
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('editPanel').style.display = 'none';
+            document.getElementById('editForm').reset();
+        }
+
+        // --- ACTUALIZAR VIDEO (UPDATE) ---
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editVidId').value;
+            const titulo = document.getElementById('editTitulo').value;
+            const url = document.getElementById('editUrl').value;
+            const categoria = document.getElementById('editCategoria').value;
+            const msg = document.getElementById('editMsg');
+
+            try {
+                const res = await fetch(`${API_URL}/videos/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${userToken}` 
+                    },
+                    body: JSON.stringify({ titulo, url, categoria })
+                });
+
+                if (res.ok) {
+                    msg.style.color = "#ffaa00";
+                    msg.innerHTML = "¡Video actualizado correctamente!";
+                    setTimeout(() => {
+                        cancelarEdicion();
+                    }, 1500); // Se cierra el panel después de 1.5 seg
+                    cargarVideos(); // Recargar la lista
+                } else {
+                    const data = await res.json();
+                    msg.style.color = "red";
+                    msg.innerHTML = data.message || "Error al actualizar";
+                }
+            } catch (error) {
+                msg.innerHTML = "Error de conexión";
+            }
+        });
+
+        // --- ELIMINAR VIDEO (DELETE) ---
         async function eliminarVideo(id) {
-            // Confirmación para evitar borrados accidentales
-            if(!confirm("¿Estás seguro de que quieres borrar este video de la base de datos?")) return;
+            if(!confirm("¿Estás seguro de que quieres borrar este video?")) return;
 
             try {
                 const res = await fetch(`${API_URL}/videos/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${userToken}` // Enviamos el token para tener permiso
+                        'Authorization': `Bearer ${userToken}` 
                     }
                 });
                 
                 if(res.ok) {
                     alert("Video eliminado correctamente");
-                    cargarVideos(); // Recargar la lista para que desaparezca
+                    cargarVideos(); 
                 } else {
                     const data = await res.json();
                     alert(data.message || "Error al eliminar");
