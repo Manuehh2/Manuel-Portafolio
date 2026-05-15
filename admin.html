@@ -15,7 +15,7 @@
     </nav>
 
     <div class="container py-5">
-        <h1 class="text-center mb-4">Panel de Control</h1>
+        <h1 class="text-center mb-4">Panel de Control M-ADMIN</h1>
 
         <div class="row justify-content-center" id="loginSection">
             <div class="col-md-5 border rounded p-4" style="background-color: rgba(0,0,0,0.2);">
@@ -35,33 +35,43 @@
             </div>
         </div>
 
-        <div class="row justify-content-center mt-5" id="adminSection" style="display: none;">
-            <div class="col-md-6 border rounded p-4" style="background-color: rgba(0,0,0,0.2);">
-                <h3 class="text-center" style="color: #00ffff;">Agregar Nuevo Video</h3>
-                <form id="videoForm">
-                    <div class="mb-3">
-                        <label>Título del Video</label>
-                        <input type="text" id="vidTitulo" class="form-control bg-dark text-white" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>URL (Ej. enlace de YouTube)</label>
-                        <input type="url" id="vidUrl" class="form-control bg-dark text-white" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Categoría</label>
-                        <input type="text" id="vidCategoria" class="form-control bg-dark text-white" placeholder="Ej. Edits, Vlogs">
-                    </div>
-                    <button type="submit" class="btn btn-info w-100">Guardar Video en Base de Datos</button>
-                </form>
-                <div id="videoMsg" class="mt-3 text-center"></div>
+        <div id="adminPanels" style="display: none;">
+            
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-8 border rounded p-4" style="background-color: rgba(0,0,0,0.2);">
+                    <h3 class="text-center" style="color: #00ffff;">Agregar Nuevo Video</h3>
+                    <form id="videoForm">
+                        <div class="mb-3">
+                            <label>Título del Video</label>
+                            <input type="text" id="vidTitulo" class="form-control bg-dark text-white" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>URL (Ej. enlace de YouTube)</label>
+                            <input type="url" id="vidUrl" class="form-control bg-dark text-white" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Categoría</label>
+                            <input type="text" id="vidCategoria" class="form-control bg-dark text-white" placeholder="Ej. Edits, Vlogs">
+                        </div>
+                        <button type="submit" class="btn btn-info w-100">Guardar Video en Base de Datos</button>
+                    </form>
+                    <div id="videoMsg" class="mt-3 text-center"></div>
+                </div>
             </div>
+
+            <div class="row justify-content-center mt-5">
+                <div class="col-md-8 border rounded p-4" style="background-color: rgba(0,0,0,0.2);">
+                    <h3 class="text-center mb-4" style="color: #ff4d4d;">Gestionar Videos Existentes</h3>
+                    <div id="listaVideos"></div> 
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // Asegúrate de poner tu URL de Render aquí
         const API_URL = 'https://manuelportafolio-backend.onrender.com/api';
-        let userToken = ''; // Aquí guardaremos el token temporalmente
+        let userToken = ''; 
 
         // --- LÓGICA DE LOGIN ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -83,9 +93,12 @@
                     msg.innerHTML = `¡Bienvenido ${data.nombre}!`;
                     userToken = data.token; // Guardamos el token
                     
-                    // Ocultar login y mostrar el panel de videos
+                    // Ocultar login y mostrar los paneles de control
                     document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('adminSection').style.display = 'block';
+                    document.getElementById('adminPanels').style.display = 'block';
+                    
+                    // Cargar los videos apenas inicie sesión
+                    cargarVideos();
                 } else {
                     msg.style.color = "red";
                     msg.innerHTML = data.message || "Credenciales incorrectas";
@@ -95,7 +108,38 @@
             }
         });
 
-        // --- LÓGICA PARA CREAR VIDEO ---
+        // --- LÓGICA PARA LEER VIDEOS (READ) ---
+        async function cargarVideos() {
+            try {
+                const res = await fetch(`${API_URL}/videos`);
+                const videos = await res.json();
+                const contenedor = document.getElementById('listaVideos');
+                
+                contenedor.innerHTML = ''; // Limpiar lista
+                
+                if(videos.length === 0){
+                    contenedor.innerHTML = '<p class="text-center text-secondary">No hay videos en la base de datos.</p>';
+                    return;
+                }
+
+                // Generar un bloque HTML por cada video
+                videos.forEach(video => {
+                    contenedor.innerHTML += `
+                        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary py-3">
+                            <div>
+                                <h5 class="mb-1">${video.titulo}</h5>
+                                <small class="text-secondary">Categoría: ${video.categoria} | ID: ${video._id}</small>
+                            </div>
+                            <button onclick="eliminarVideo('${video._id}')" class="btn btn-sm btn-outline-danger">Borrar</button>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.log("Error al cargar la lista de videos");
+            }
+        }
+
+        // --- LÓGICA PARA CREAR VIDEO (CREATE) ---
         document.getElementById('videoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const titulo = document.getElementById('vidTitulo').value;
@@ -108,7 +152,7 @@
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${userToken}` // ¡AQUÍ ENVIAMOS EL TOKEN!
+                        'Authorization': `Bearer ${userToken}` 
                     },
                     body: JSON.stringify({ titulo, url, categoria })
                 });
@@ -116,8 +160,9 @@
 
                 if (res.ok) {
                     msg.style.color = "#00ffff";
-                    msg.innerHTML = "¡Video creado exitosamente en la base de datos!";
+                    msg.innerHTML = "¡Video creado exitosamente!";
                     document.getElementById('videoForm').reset();
+                    cargarVideos(); // Recargar la lista para que aparezca el nuevo
                 } else {
                     msg.style.color = "red";
                     msg.innerHTML = data.message || "Error al crear el video";
@@ -126,6 +171,31 @@
                 msg.innerHTML = "Error de conexión";
             }
         });
+
+        // --- LÓGICA PARA ELIMINAR VIDEO (DELETE) ---
+        async function eliminarVideo(id) {
+            // Confirmación para evitar borrados accidentales
+            if(!confirm("¿Estás seguro de que quieres borrar este video de la base de datos?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/videos/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}` // Enviamos el token para tener permiso
+                    }
+                });
+                
+                if(res.ok) {
+                    alert("Video eliminado correctamente");
+                    cargarVideos(); // Recargar la lista para que desaparezca
+                } else {
+                    const data = await res.json();
+                    alert(data.message || "Error al eliminar");
+                }
+            } catch (error) {
+                alert("Error de conexión al intentar eliminar");
+            }
+        }
     </script>
 </body>
 </html>
